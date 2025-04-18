@@ -1,103 +1,261 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faUpload,
+  faBolt,
+  faShieldAlt,
+  faSlidersH,
+  faFileExcel,
+  faDownload
+} from '@fortawesome/free-solid-svg-icons';
+import Navbar from './components/Navbar';
+import Button from './components/Button';
+import FileDropArea from './components/FileDropArea';
+import FeatureCard from './components/FeatureCard';
+import * as XLSX from 'xlsx';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [isFileUploadVisible, setIsFileUploadVisible] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [processedFileUrl, setProcessedFileUrl] = useState<string | null>(null);
+  const [processedFileName, setProcessedFileName] = useState<string>('');
+  const [originalRowCount, setOriginalRowCount] = useState<number>(0);
+  const [uniqueRowCount, setUniqueRowCount] = useState<number>(0);
+  
+  const handleFileSelected = (file: File) => {
+    setSelectedFile(file);
+    setIsFileUploadVisible(false);
+    setError(null);
+    setProcessedFileUrl(null);
+    setOriginalRowCount(0);
+    setUniqueRowCount(0);
+    console.log('File selected:', file.name);
+  };
+  
+  const showFileUpload = () => {
+    setSelectedFile(null);
+    setIsFileUploadVisible(true);
+    setError(null);
+    setProcessedFileUrl(null);
+    setOriginalRowCount(0);
+    setUniqueRowCount(0);
+  };
+  
+  const handleStartProcessing = async () => {
+    if (!selectedFile) {
+      setError("Please select a file first.");
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    setProcessedFileUrl(null);
+    setOriginalRowCount(0);
+    setUniqueRowCount(0);
+    console.log('Starting processing for:', selectedFile.name);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      const data: Record<string, unknown>[] = XLSX.utils.sheet_to_json(worksheet);
+
+      const uniqueData: Record<string, unknown>[] = [];
+      const seen = new Set<string>();
+
+      for (const row of data) {
+        const rowString = JSON.stringify(row);
+        if (!seen.has(rowString)) {
+          seen.add(rowString);
+          uniqueData.push(row);
+        }
+      }
+
+      setOriginalRowCount(data.length);
+      setUniqueRowCount(uniqueData.length);
+
+      console.log(`Original rows: ${data.length}, Unique rows: ${uniqueData.length}`);
+
+      const newWorksheet = XLSX.utils.json_to_sheet(uniqueData);
+      
+      const newWorkbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, firstSheetName);
+
+      const outputBuffer = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([outputBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      const url = URL.createObjectURL(blob);
+      setProcessedFileUrl(url);
+
+      const originalFileName = selectedFile.name;
+      const nameWithoutExtension = originalFileName.substring(0, originalFileName.lastIndexOf('.')) || originalFileName;
+      setProcessedFileName(`${nameWithoutExtension}_deduplicated.xlsx`);
+
+      console.log('Processing finished for:', selectedFile.name);
+
+    } catch (err) {
+      console.error('Processing error:', err);
+      setError(err instanceof Error ? err.message : 'Processing encountered an unknown error.');
+      setProcessedFileUrl(null);
+      setOriginalRowCount(0);
+      setUniqueRowCount(0);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  return (
+    <main className="min-h-screen bg-background">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4 sm:px-6 md:pt-40 md:pb-28 text-center">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-primary-dark">
+            <span className="block">Excel Data Deduplication, Simple and Efficient</span>
+          </h1>
+          <p className="text-xl text-secondary-text mb-10 max-w-2xl mx-auto">
+            Upload an Excel file, remove duplicate rows with one click, and improve your data processing efficiency
+          </p>
+          
+          {!selectedFile && !isFileUploadVisible && (
+            <Button 
+              size="lg" 
+              icon={<FontAwesomeIcon icon={faUpload} className="h-5 w-5 mr-2" />}
+              onClick={showFileUpload}
+            >
+              Upload File Now
+            </Button>
+          )}
+
+          {isFileUploadVisible && (
+             <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Upload Your Excel File</h3>
+              <FileDropArea onFileSelect={handleFileSelected} />
+               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Drag and drop files here, or click to select</p>
+               <Button size="sm" onClick={() => setIsFileUploadVisible(false)} className="mt-4 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</Button>
+             </div>
+          )}
+
+          {selectedFile && (
+            <div className="mt-10 max-w-lg mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 text-left">
+               <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Selected File</h3>
+                 <Button size="sm" onClick={showFileUpload} disabled={isProcessing} className="border border-gray-300 dark:border-gray-600 px-3 py-1 rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                    Change File
+                 </Button>
+               </div>
+
+               <div className="flex items-center space-x-3 bg-gray-100 dark:bg-gray-700 p-3 rounded-md mb-4">
+                 <FontAwesomeIcon icon={faFileExcel} className="h-6 w-6 text-green-600" />
+                 <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{selectedFile.name}</span>
+               </div>
+
+              <Button
+                size="lg"
+                onClick={handleStartProcessing}
+                disabled={isProcessing}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isProcessing ? 'Processing...' : 'Start Cleaning'}
+              </Button>
+              {error && <p className="text-red-500 text-sm mt-2 text-center">{error}</p>}
+
+              {processedFileUrl && (
+                <div className="mt-4 text-center">
+                  <a
+                    href={processedFileUrl}
+                    download={processedFileName}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <FontAwesomeIcon icon={faDownload} className="h-5 w-5 mr-2" />
+                    Download Processed File
+                  </a>
+                  {originalRowCount > 0 && uniqueRowCount >= 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Processing complete! Found {originalRowCount - uniqueRowCount} duplicate rows (Original: {originalRowCount} rows, After processing: {uniqueRowCount} rows).
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+      
+      {/* Features Section */}
+      <section className="py-16 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={<FontAwesomeIcon icon={faBolt} />}
+              title="Fast Processing"
+              description="Efficient algorithms quickly process large Excel files, saving your valuable time"
+            />
+            
+            <FeatureCard
+              icon={<FontAwesomeIcon icon={faShieldAlt} />}
+              title="Safe and Reliable"
+              description="Files are processed locally without server uploads, ensuring your data security"
+            />
+            
+            <FeatureCard
+              icon={<FontAwesomeIcon icon={faSlidersH} />}
+              title="Flexible Configuration"
+              description="Custom column selection and precise control over deduplication rules to meet different needs"
+            />
+          </div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      {!selectedFile && !isFileUploadVisible && (
+         <section className="py-20 px-4 sm:px-6 bg-gradient-to-r from-primary-dark to-primary">
+           <div className="max-w-4xl mx-auto text-center">
+             <h2 className="text-3xl font-bold mb-6 text-gray-800">Ready to Clean Your Excel Data?</h2>
+             <p className="text-lg mb-8 opacity-90 text-gray-800">
+               Our tool makes it simple to identify and remove duplicate rows in your spreadsheets.
+             </p>
+             <Button
+               size="lg"
+               className="shadow-lg hover:shadow-xl button button-primary"
+               onClick={showFileUpload}
+             >
+               Upload File to Begin
+             </Button>
+           </div>
+         </section>
+       )}
+      
+      {/* Footer */}
+      <footer className="py-8 px-4 sm:px-6 border-t border-divider">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <div className="mb-4 md:mb-0">
+            <p className="text-sm text-secondary-text">
+              © {new Date().getFullYear()} Excel Deduplication Expert. All rights reserved.
+            </p>
+          </div>
+          
+          <div className="flex space-x-6">
+            <Link href="/privacy" className="text-sm text-secondary-text hover:text-primary">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="text-sm text-secondary-text hover:text-primary">
+              Terms of Service
+            </Link>
+            <Link href="/contact" className="text-sm text-secondary-text hover:text-primary">
+              Contact Us
+            </Link>
+          </div>
+        </div>
       </footer>
-    </div>
+    </main>
   );
 }
