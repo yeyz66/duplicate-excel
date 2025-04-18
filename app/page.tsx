@@ -119,10 +119,10 @@ export default function Home() {
       <section className="pt-32 pb-20 px-4 sm:px-6 md:pt-40 md:pb-28 text-center">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 text-primary-dark">
-            <span className="block">Excel Data Deduplication, Simple and Efficient</span>
+            <span className="block">How to Remove Duplicates in Excel: Fast & Easy</span>
           </h1>
           <p className="text-xl text-secondary-text mb-10 max-w-2xl mx-auto">
-            Upload an Excel file, remove duplicate rows with one click, and improve your data processing efficiency
+            Learn how to delete duplicates in Excel with our simple tool. Upload your file, remove duplicate rows with one click, and improve your data accuracy instantly.
           </p>
           
           {!selectedFile && !isFileUploadVisible && (
@@ -131,7 +131,7 @@ export default function Home() {
               icon={<FontAwesomeIcon icon={faUpload} className="h-5 w-5 mr-2" />}
               onClick={showFileUpload}
             >
-              Upload File Now
+              Remove Excel Duplicates Now
             </Button>
           )}
 
@@ -193,23 +193,24 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-16 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold mb-10 text-center text-primary-dark">How to Delete Duplicates in Excel</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard
               icon={<FontAwesomeIcon icon={faBolt} />}
-              title="Fast Processing"
-              description="Efficient algorithms quickly process large Excel files, saving your valuable time"
+              title="Step 1: Upload Your Excel File"
+              description="Simply upload your Excel spreadsheet containing duplicate data that you want to clean"
             />
             
             <FeatureCard
               icon={<FontAwesomeIcon icon={faShieldAlt} />}
-              title="Safe and Reliable"
-              description="Files are processed locally without server uploads, ensuring your data security"
+              title="Step 2: Process Your File"
+              description="Our tool automatically identifies and removes duplicate rows while keeping your data secure"
             />
             
             <FeatureCard
               icon={<FontAwesomeIcon icon={faSlidersH} />}
-              title="Flexible Configuration"
-              description="Custom column selection and precise control over deduplication rules to meet different needs"
+              title="Step 3: Download Clean Data"
+              description="Download your Excel file with all duplicates removed, saving you time and preventing data errors"
             />
           </div>
         </div>
@@ -219,16 +220,16 @@ export default function Home() {
       {!selectedFile && !isFileUploadVisible && (
          <section className="py-20 px-4 sm:px-6 bg-gradient-to-r from-primary-dark to-primary">
            <div className="max-w-4xl mx-auto text-center">
-             <h2 className="text-3xl font-bold mb-6 text-gray-800">Ready to Clean Your Excel Data?</h2>
+             <h2 className="text-3xl font-bold mb-6 text-gray-800">Remove Duplicates in Excel Today</h2>
              <p className="text-lg mb-8 opacity-90 text-gray-800">
-               Our tool makes it simple to identify and remove duplicate rows in your spreadsheets.
+               Stop wasting time manually finding and deleting duplicates in Excel. Our tool makes it simple to identify and remove duplicate rows in your spreadsheets instantly.
              </p>
              <Button
                size="lg"
                className="shadow-lg hover:shadow-xl button button-primary"
                onClick={showFileUpload}
              >
-               Upload File to Begin
+               Delete Excel Duplicates Now
              </Button>
            </div>
          </section>
@@ -239,7 +240,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <p className="text-sm text-secondary-text">
-              © {new Date().getFullYear()} Excel Deduplication Expert. All rights reserved.
+              © {new Date().getFullYear()} Excel Duplicate Remover. All rights reserved.
             </p>
           </div>
           

@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 config.autoAddCss = false;
 
 export const metadata: Metadata = {
-  title: "Excel去重专家 - 高效处理Excel数据",
-  description: "上传Excel文件，一键去除重复数据行，提高数据处理效率",
-  keywords: ["Excel", "去重", "数据清洗", "excel工具", "重复行删除"],
+  title: "How to Remove Duplicates in Excel - Easy & Fast Duplicate Removal Tool",
+  description: "Learn how to delete duplicates in Excel quickly with our free online tool. Simple step-by-step guide to remove Excel duplicates and clean your data instantly.",
+  keywords: ["how to remove duplicates in excel", "how to delete duplicates in excel", "excel duplicates", "remove excel duplicates", "excel duplicate removal", "clean excel data"],
   icons: {
     icon: '/favicon1.svg',
     apple: '/favicon1.svg',

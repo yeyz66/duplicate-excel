@@ -25,7 +25,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <FontAwesomeIcon icon={faTable} className="h-5 w-5 mr-2" />
-            <span className="text-xl font-bold">Excel Deduplication Expert</span>
+            <span className="text-xl font-bold">How to Remove Duplicates in Excel</span>
           </Link>
           
           <div className="hidden md:flex space-x-8">
@@ -35,7 +35,7 @@ export default function Navbar() {
             </Link>
             <Link href="/help" className="flex items-center text-sm font-medium hover:bg-primary-dark rounded-md px-3 py-2 transition-colors">
               <FontAwesomeIcon icon={faQuestionCircle} className="h-4 w-4 mr-2" />
-              Help
+              Delete Excel Duplicates
             </Link>
           </div>
           
